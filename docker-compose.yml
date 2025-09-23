@@ -300,24 +300,6 @@ services:
       - "traefik.http.routers.readarr.entrypoints=web"
       - "traefik.http.services.readarr.loadbalancer.server.port=8787"
 
-  # SSO Authentication
-  authelia:
-    image: authelia/authelia:4.38
-    container_name: authelia
-    ports:
-      - "192.168.50.199:9091:9091"
-    volumes:
-      - ./authelia:/config
-      - ./authelia/secrets:/secrets:ro
-    environment:
-      - TZ=${TIMEZONE}
-    networks:
-      - management_network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.authelia.rule=Host(`serenity.watch`) && PathPrefix(`/auth`)"
-      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/authz/forward-auth"
 
   # DNS and Ad-blocking
   adguardhome:

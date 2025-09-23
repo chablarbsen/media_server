@@ -262,9 +262,7 @@ logs/
 *.tmp
 *.temp
 
-# Auth configuration
-authelia/configuration.yml
-authelia/secrets/
+# Auth configuration (removed - authelia not used)
 
 # But DO track these
 !config-template.yaml

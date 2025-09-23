@@ -65,7 +65,6 @@ containers=(
     "deluge"
     "gluetun"
     "adguardhome"
-    "authelia"
     "immich-server"
     "cloudflared"
 )
