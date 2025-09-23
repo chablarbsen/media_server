@@ -8,14 +8,14 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - "192.168.50.51:8888:8888/tcp"  # HTTP proxy bound to enp3s0
-      - "192.168.50.51:9091:9091"      # Transmission on enp3s0
-      - "192.168.50.51:8080:8080"      # SABnzbd on enp3s0
-      - "192.168.50.51:8112:8112"      # Deluge web UI on enp3s0
-      - "192.168.50.51:58846:58846"    # Deluge daemon on enp3s0
+      - "192.168.1.101:8888:8888/tcp"  # HTTP proxy bound to enp3s0
+      - "192.168.1.101:9091:9091"      # Transmission on enp3s0
+      - "192.168.1.101:8080:8080"      # SABnzbd on enp3s0
+      - "192.168.1.101:8112:8112"      # Deluge web UI on enp3s0
+      - "192.168.1.101:58846:58846"    # Deluge daemon on enp3s0
     volumes:
       - ./gluetun:/gluetun
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=openvpn
@@ -69,7 +69,7 @@ services:
       - management_network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.landing.rule=Host(`serenity.watch`) && Path(`/`)"
+      - "traefik.http.routers.landing.rule=Host(`yourdomain.example.com`) && Path(`/`)"
       - "traefik.http.routers.landing.entrypoints=web"
       - "traefik.http.services.landing.loadbalancer.server.port=80"
 
@@ -78,8 +78,8 @@ services:
     image: traefik:v3.0
     container_name: traefik
     ports:
-      - "192.168.50.199:80:80"      # HTTP on enp2s0
-      - "192.168.50.199:8090:8080"  # Dashboard on enp2s0
+      - "192.168.1.100:80:80"      # HTTP on enp2s0
+      - "192.168.1.100:8090:8080"  # Dashboard on enp2s0
     command:
       - "--api.dashboard=true"
       - "--providers.docker=true"
@@ -96,7 +96,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`serenity.watch`) && PathPrefix(`/traefik`)"
+      - "traefik.http.routers.dashboard.rule=Host(`yourdomain.example.com`) && PathPrefix(`/traefik`)"
       - "traefik.http.routers.dashboard.service=api@internal"
 
   # Download Clients (VPN-routed)
@@ -112,7 +112,7 @@ services:
     volumes:
       - ./sabnzbd:/config
       - /data/usenet:/data/usenet
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     depends_on:
       gluetun:
         condition: service_started
@@ -130,7 +130,7 @@ services:
     volumes:
       - ./deluge:/config
       - /data/torrents:/data/torrents
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     depends_on:
       gluetun:
         condition: service_started
@@ -141,7 +141,7 @@ services:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
     ports:
-      - "192.168.50.199:32400:32400"  # Bind to enp2s0 IP
+      - "192.168.1.100:32400:32400"  # Bind to enp2s0 IP
     deploy:
       resources:
         reservations:
@@ -160,13 +160,13 @@ services:
     volumes:
       - ./plex:/config
       - /data/media:/data/media
-      - /home/chab/ssd-cache/transcode:/transcode
+      - /home/user/ssd-cache/transcode:/transcode
     networks:
       - management_network
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.plex.rule=Host(`serenity.watch`) && PathPrefix(`/plex`)"
+      - "traefik.http.routers.plex.rule=Host(`yourdomain.example.com`) && PathPrefix(`/plex`)"
       - "traefik.http.routers.plex.entrypoints=web"
       - "traefik.http.services.plex.loadbalancer.server.port=32400"
 
@@ -188,7 +188,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.prowlarr.rule=Host(`serenity.watch`) && PathPrefix(`/prowlarr`)"
+      - "traefik.http.routers.prowlarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/prowlarr`)"
       - "traefik.http.routers.prowlarr.entrypoints=web"
       - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
 
@@ -203,7 +203,7 @@ services:
     volumes:
       - ./sonarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
       - arr_network
@@ -211,7 +211,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`serenity.watch`) && PathPrefix(`/sonarr`)"
+      - "traefik.http.routers.sonarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/sonarr`)"
       - "traefik.http.routers.sonarr.entrypoints=web"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
@@ -226,7 +226,7 @@ services:
     volumes:
       - ./radarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
       - arr_network
@@ -234,7 +234,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`serenity.watch`) && PathPrefix(`/radarr`)"
+      - "traefik.http.routers.radarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/radarr`)"
       - "traefik.http.routers.radarr.entrypoints=web"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
@@ -254,7 +254,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.bazarr.rule=Host(`serenity.watch`) && PathPrefix(`/bazarr`)"
+      - "traefik.http.routers.bazarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/bazarr`)"
       - "traefik.http.routers.bazarr.entrypoints=web"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
 
@@ -269,13 +269,13 @@ services:
     volumes:
       - ./lidarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lidarr.rule=Host(`serenity.watch`) && PathPrefix(`/lidarr`)"
+      - "traefik.http.routers.lidarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/lidarr`)"
       - "traefik.http.routers.lidarr.entrypoints=web"
       - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
 
@@ -290,13 +290,13 @@ services:
     volumes:
       - ./readarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.readarr.rule=Host(`serenity.watch`) && PathPrefix(`/readarr`)"
+      - "traefik.http.routers.readarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/readarr`)"
       - "traefik.http.routers.readarr.entrypoints=web"
       - "traefik.http.services.readarr.loadbalancer.server.port=8787"
 
@@ -305,7 +305,7 @@ services:
     image: authelia/authelia:4.38
     container_name: authelia
     ports:
-      - "192.168.50.199:9091:9091"
+      - "192.168.1.100:9091:9091"
     volumes:
       - ./authelia:/config
       - ./authelia/secrets:/secrets:ro
@@ -316,7 +316,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.authelia.rule=Host(`serenity.watch`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.authelia.rule=Host(`yourdomain.example.com`) && PathPrefix(`/auth`)"
       - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/authz/forward-auth"
 
   # DNS and Ad-blocking
@@ -324,9 +324,9 @@ services:
     image: adguard/adguardhome:latest
     container_name: adguardhome
     ports:
-      - "192.168.50.199:53:53/tcp"
-      - "192.168.50.199:53:53/udp"
-      - "192.168.50.199:3001:3000/tcp"
+      - "192.168.1.100:53:53/tcp"
+      - "192.168.1.100:53:53/udp"
+      - "192.168.1.100:3001:3000/tcp"
     volumes:
       - ./adguard/work:/opt/adguardhome/work
       - ./adguard/conf:/opt/adguardhome/conf
@@ -340,7 +340,7 @@ services:
     image: ghcr.io/immich-app/immich-server:release
     command: ['start.sh', 'immich']
     ports:
-      - "192.168.50.199:2283:3001"
+      - "192.168.1.100:2283:3001"
     volumes:
       - /data/immich/library:/usr/src/app/upload
     environment:

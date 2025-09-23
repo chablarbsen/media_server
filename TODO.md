@@ -20,7 +20,7 @@
 
 - [x] Configure download paths in containers ✅
   - ~~Mount `/downloads` directory in all arr containers~~
-  - Added `/home/chab/ssd-cache/downloads:/downloads` to all arr services
+  - Added `/home/user/ssd-cache/downloads:/downloads` to all arr services
   - All services now have access to downloads directory
 
 ### Medium Priority
@@ -82,9 +82,9 @@ docker compose -f /docker/mediaserver/docker-compose.yml restart <service-name>
 docker network ls | grep mediaserver
 
 # Access services
-# Traefik: http://192.168.50.199:8090
-# Services: http://192.168.50.199:80/<service-name>
-# Deluge: http://192.168.50.51:8112
+# Traefik: http://192.168.1.100:8090
+# Services: http://192.168.1.100:80/<service-name>
+# Deluge: http://192.168.1.101:8112
 ```
 
 ## Notes

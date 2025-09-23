@@ -152,9 +152,9 @@ fi
 echo ""
 echo "Service Endpoints:"
 echo "-----------------"
-echo "Traefik Dashboard: http://192.168.50.199:8090"
-echo "Plex: http://192.168.50.199:32400"
-echo "Services via Traefik: http://192.168.50.199:80"
+echo "Traefik Dashboard: http://192.168.1.100:8090"
+echo "Plex: http://192.168.1.100:32400"
+echo "Services via Traefik: http://192.168.1.100:80"
 echo ""
 
 # Summary

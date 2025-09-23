@@ -24,7 +24,7 @@ echo "------------------------"
 if docker exec sabnzbd wget -q -O- "http://localhost:8080/api?mode=version" >/dev/null 2>&1; then
     version=$(docker exec sabnzbd wget -q -O- "http://localhost:8080/api?mode=version" 2>/dev/null | grep -oP '(?<="version":")[^"]+')
     echo -e "${GREEN}✓${NC} SABnzbd is running (version: $version)"
-    echo "  - Web UI: http://192.168.50.199:80/sabnzbd"
+    echo "  - Web UI: http://192.168.1.100:80/sabnzbd"
     echo "  - Internal address for arr apps: http://sabnzbd:8080"
 
     # Check if connected from Sonarr/Radarr perspective
@@ -51,7 +51,7 @@ echo "--------------------------------"
 
 if docker exec gluetun wget -q -O- "http://localhost:8112" >/dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} Deluge is running"
-    echo "  - Web UI: http://192.168.50.51:8112"
+    echo "  - Web UI: http://192.168.1.101:8112"
     echo "  - Internal address for arr apps: http://gluetun:8112"
     echo "  - Default password: deluge"
 

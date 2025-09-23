@@ -1,40 +1,59 @@
-# Sensitive files - never commit these
+# SECURITY - Never commit these
 .env
 .env.secrets
 *.key
 *.pem
 *.crt
 *.p12
+*.bak
+*_backup*
 
-# Service configuration directories (contain sensitive data)
+# Service configurations with sensitive data
 */config.xml
 */config.ini
 */sabnzbd.ini
 */settings.json
+*/server.conf
+authelia/configuration.yml
+authelia/secrets/
+gluetun/servers.json
 
-# Backup directories
+# Backups and data
 backups/
+data/
+downloads/
+cache/
 
-# Log files
+# Logs and databases
 *.log
 logs/
-
-# Database files
 *.db
 *.sqlite
+*.db-wal
+*.db-shm
 
-# Cache and temporary files
+# Temporary files
 .cache/
 *.tmp
 *.temp
+*.swp
+.DS_Store
 
-# Auth configuration
-authelia/configuration.yml
-authelia/secrets/
+# Docker volumes
+**/work/
+**/cache/
+**/transcodes/
 
-# But DO track these
-!config-template.yaml
-!docker-compose.yml
+# Runtime files
+*.pid
+*.lock
+
+# Traefik certificates
+traefik/letsencrypt/
+
+# Allow these safe files
+!.env.example
+!docker-compose.template.yml
 !*.sh
-!TODO.md
-!README.md
+!*.md
+!config-template.yaml

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serenity - Can't Take the Sky From Me</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .bebas-neue-regular {
+            font-family: "Bebas Neue", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            background: 
+                radial-gradient(ellipse at top, transparent 0%, rgba(0,0,0,0.8) 70%),
+                radial-gradient(ellipse at bottom, #1a0f0a 0%, transparent 70%),
+                linear-gradient(180deg, #0a0a0f 0%, #1a1410 40%, #2a1810 100%);
+            color: #d4af37;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated stars background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, #ddd, transparent),
+                radial-gradient(1px 1px at 50px 50px, #fff, transparent),
+                radial-gradient(1px 1px at 80px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 110px 40px, #eee, transparent);
+            background-size: 200px 200px;
+            animation: drift 120s linear infinite;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        @keyframes drift {
+            from { transform: rotate(0deg) translateX(0); }
+            to { transform: rotate(360deg) translateX(100px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Ship silhouette */
+        .ship-bg {
+            position: fixed;
+            bottom: -50px;
+            right: -100px;
+            width: 600px;
+            height: 400px;
+            background: linear-gradient(45deg, transparent 40%, rgba(212, 175, 55, 0.03) 100%);
+            transform: rotate(-15deg);
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        h1 {
+            font-family: "Bebas Neue", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: #d4af37;
+            text-shadow: 
+                0 0 20px rgba(212, 175, 55, 0.5),
+                0 0 40px rgba(212, 175, 55, 0.3),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 0.1em;
+            margin-bottom: 0;
+            position: relative;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 0 40px rgba(212, 175, 55, 0.3), 2px 2px 4px rgba(0, 0, 0, 0.8); }
+            to { text-shadow: 0 0 30px rgba(212, 175, 55, 0.7), 0 0 50px rgba(212, 175, 55, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.8); }
+        }
+
+        .chinese-text {
+            font-size: 1.8rem;
+            color: rgba(212, 175, 55, 0.6);
+            margin: 10px 0;
+            letter-spacing: 0.3em;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #8b7355;
+            font-style: italic;
+            margin: 10px 0 40px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px 0;
+        }
+
+        .service-card {
+            background: linear-gradient(135deg, 
+                rgba(139, 115, 85, 0.1) 0%, 
+                rgba(212, 175, 55, 0.05) 50%,
+                rgba(42, 35, 25, 0.3) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 25px 20px;
+            text-decoration: none;
+            color: #d4af37;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(212, 175, 55, 0.2);
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #d4af37, #8b7355, #d4af37);
+            border-radius: 8px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+
+        .service-card:hover::before {
+            opacity: 0.7;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 8px 25px rgba(212, 175, 55, 0.3),
+                inset 0 1px 0 rgba(212, 175, 55, 0.4);
+            border-color: rgba(212, 175, 55, 0.6);
+            background: linear-gradient(135deg, 
+                rgba(139, 115, 85, 0.2) 0%, 
+                rgba(212, 175, 55, 0.1) 50%,
+                rgba(42, 35, 25, 0.4) 100%);
+        }
+
+        .service-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .service-desc {
+            font-size: 0.9rem;
+            color: rgba(212, 175, 55, 0.7);
+            font-style: italic;
+        }
+
+        .corner-decor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .corner-decor.top-left {
+            top: 8px;
+            left: 8px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .corner-decor.bottom-right {
+            bottom: 8px;
+            right: 8px;
+            border-left: none;
+            border-top: none;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: rgba(212, 175, 55, 0.5);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .quote-container {
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quote {
+            display: inline-block;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .quote.active {
+            opacity: 1;
+        }
+
+        .quote-author {
+            font-size: 0.8rem;
+            color: rgba(212, 175, 55, 0.4);
+            margin-top: 5px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Firefly effect */
+        .firefly {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #ffeb3b, transparent);
+            border-radius: 50%;
+            animation: fly 15s linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes fly {
+            0% {
+                opacity: 0;
+                transform: translate(0, 100vh) scale(0);
+            }
+            10%, 90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(100vw, -100vh) scale(1);
+            }
+        }
+
+        .firefly:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
+        .firefly:nth-child(2) { left: 30%; animation-delay: 3s; animation-duration: 15s; }
+        .firefly:nth-child(3) { left: 50%; animation-delay: 5s; animation-duration: 18s; }
+        .firefly:nth-child(4) { left: 70%; animation-delay: 8s; animation-duration: 14s; }
+        .firefly:nth-child(5) { left: 90%; animation-delay: 10s; animation-duration: 16s; }
+
+        @media (max-width: 768px) {
+            .services {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="firefly"></div>
+    <div class="firefly"></div>
+    <div class="firefly"></div>
+    <div class="firefly"></div>
+    <div class="firefly"></div>
+    
+    <div class="ship-bg"></div>
+    
+    <div class="container">
+        <header>
+            <h1>SERENITY</h1>
+            <div class="chinese-text">宁静</div>
+            <p class="tagline">"You can't take the sky from me"</p>
+        </header>
+
+        <main class="services">
+            <a href="/sonarr" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Sonarr</span>
+                <span class="service-desc">Wave Capture</span>
+            </a>
+            
+            <a href="/radarr" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Radarr</span>
+                <span class="service-desc">Cortex Archive</span>
+            </a>
+            
+            <a href="/prowlarr" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Prowlarr</span>
+                <span class="service-desc">Signal Tracker</span>
+            </a>
+            
+            <a href="/bazarr" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Bazarr</span>
+                <span class="service-desc">Translation Matrix</span>
+            </a>
+            
+            <a href="/lidarr" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Lidarr</span>
+                <span class="service-desc">Audio Cortex</span>
+            </a>
+
+            <a href="/sabnzbd" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">SABnzbd</span>
+                <span class="service-desc">News Feed</span>
+            </a>
+
+            <a href="/deluge" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Deluge</span>
+                <span class="service-desc">Data Stream</span>
+            </a>
+            
+            <a href="/plex" class="service-card">
+                <span class="corner-decor top-left"></span>
+                <span class="corner-decor bottom-right"></span>
+                <span class="service-name">Plex</span>
+                <span class="service-desc">Main Screen</span>
+            </a>
+        </main>
+
+        <footer>
+            <div class="quote-container">
+                <div class="quote active" id="quote">Flying through the black...</div>
+                <div class="quote-author" id="quote-author"></div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const quotes = [
+            { text: "Flying through the black...", author: "" },
+            { text: "I am a leaf on the wind", author: "- Wash" },
+            { text: "Curse your sudden but inevitable betrayal!", author: "- Wash" },
+            { text: "We have done the impossible, and that makes us mighty", author: "- Mal" },
+            { text: "I can kill you with my brain", author: "- River" },
+            { text: "Shiny!", author: "- Kaylee" },
+            { text: "Were I unwed, I would take you in a manly fashion", author: "- Wash" },
+            { text: "Can we maybe vote on the whole murdering people issue?", author: "- Wash" },
+            { text: "I aim to misbehave", author: "- Mal" },
+            { text: "No power in the 'verse can stop me", author: "- River" },
+            { text: "This is gonna get pretty interesting", author: "- Mal" },
+            { text: "Define interesting", author: "- Wash" },
+            { text: "We're still flying", author: "- Mal" },
+            { text: "That's not much", author: "- Simon" },
+            { text: "It's enough", author: "- Mal" },
+            { text: "Some people juggle geese", author: "- Wash" },
+            { text: "Everything's shiny, Cap'n", author: "- Kaylee" },
+            { text: "Big damn heroes", author: "- Zoe" },
+            { text: "Ain't we just", author: "- Mal" },
+            { text: "This land is my land", author: "- Wash" }
+        ];
+
+        let lastQuoteIndex = 0;
+        const quoteElement = document.getElementById('quote');
+        const authorElement = document.getElementById('quote-author');
+
+        function getRandomQuote() {
+            let newIndex;
+            // Ensure we don't repeat the same quote twice in a row
+            do {
+                newIndex = Math.floor(Math.random() * quotes.length);
+            } while (newIndex === lastQuoteIndex && quotes.length > 1);
+            
+            lastQuoteIndex = newIndex;
+            return quotes[newIndex];
+        }
+
+        function changeQuote() {
+            // Fade out
+            quoteElement.classList.remove('active');
+            
+            setTimeout(() => {
+                // Get random quote
+                const randomQuote = getRandomQuote();
+                quoteElement.textContent = randomQuote.text;
+                authorElement.textContent = randomQuote.author;
+                
+                // Fade in
+                quoteElement.classList.add('active');
+            }, 1000);
+        }
+
+        // Change quote every 10 seconds
+        setInterval(changeQuote, 10000);
+    </script>
+</body>
+</html>
