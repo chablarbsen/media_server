@@ -1,0 +1,377 @@
+services:
+  # VPN Gateway
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "192.168.50.51:8888:8888/tcp"  # HTTP proxy bound to enp3s0
+      - "192.168.50.51:9091:9091"      # Transmission on enp3s0
+      - "192.168.50.51:8080:8080"      # SABnzbd on enp3s0
+      - "192.168.50.51:8112:8112"      # Deluge on enp3s0
+    volumes:
+      - ./gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${PROTON_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.2.0.2/32
+      - SERVER_COUNTRIES=Netherlands
+      - VPN_PORT_FORWARDING=on
+      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.50.0/24,172.18.0.0/16
+      - FIREWALL_VPN_INPUT_PORTS=9091,8080,8112
+      - DNS_ADDRESS=10.2.0.1,1.1.1.1,1.0.0.1  # ProtonVPN DNS + Cloudflare fallback
+      - TZ=${TIMEZONE}
+      - FIREWALL_INPUT_PORTS=8888
+      - HTTPPROXY=on
+      - HTTPPROXY_LOG=on
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+    networks:
+      vpn_network:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+  # Cloudflare Tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - management_network
+    restart: unless-stopped
+    depends_on:
+      - traefik
+  # Landing page
+  landing:
+    image: nginx:alpine
+    container_name: landing
+    volumes:
+      - ./www:/usr/share/nginx/html:ro
+    networks:
+      - management_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.landing.rule=Host(`serenity.watch`) && Path(`/`)"
+      - "traefik.http.routers.landing.entrypoints=web"
+      - "traefik.http.services.landing.loadbalancer.server.port=80"
+
+  # Simplified Traefik (HTTP only - Cloudflare handles SSL)
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    ports:
+      - "192.168.50.199:80:80"      # HTTP only internal
+      - "192.168.50.199:8090:8080"  # Dashboard
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/logs:/logs
+    networks:
+      - management_network
+      - arr_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`serenity.watch`) && PathPrefix(`/traefik`)"
+      - "traefik.http.routers.dashboard.service=api@internal"      
+  # Download Clients (VPN-routed)
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./sabnzbd:/config
+      - /data/usenet:/data/usenet
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./deluge:/config
+      - /data/torrents:/data/torrents
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+
+      
+  # Media Server (Direct connection via enp2s0)
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    ports:
+      - "192.168.50.199:32400:32400"  # Bind to enp2s0 IP
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./plex:/config
+      - /data/media:/data/media
+      - /tmp:/transcode
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  # *arr Suite (Management network via enp2s0)
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    ports:
+      - "192.168.50.199:9696:9696"  # Bind to enp2s0
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./prowlarr:/config
+      - /data:/data
+    networks:
+      - management_network
+      - arr_network
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+      # ports:
+      # - "192.168.50.199:8989:8989"  # Bind to enp2s0
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./sonarr:/config
+      - /data:/data
+    networks:
+      - management_network
+      - arr_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`serenity.watch`) && PathPrefix(`/sonarr`)"
+      - "traefik.http.routers.sonarr.entrypoints=web"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+      # ports:
+      # - "192.168.50.199:7878:7878"  # Bind to enp2s0
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./radarr:/config
+      - /data:/data
+    networks:
+      - management_network
+      - arr_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`serenity.watch`) && PathPrefix(`/radarr`)"
+      - "traefik.http.routers.radarr.entrypoints=web"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    ports:
+      - "192.168.50.199:6767:6767"  # Bind to enp2s0
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./bazarr:/config
+      - /data/media:/data/media
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    ports:
+      - "192.168.50.199:8686:8686"  # Bind to enp2s0
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./lidarr:/config
+      - /data:/data
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    ports:
+      - "192.168.50.199:8787:8787"  # Bind to enp2s0
+    environment:
+      - PUID=1001    # chab user UID
+      - PGID=1002    # media group GID
+      - TZ=${TIMEZONE}
+      - UMASK=002
+    volumes:
+      - ./readarr:/config
+      - /data:/data
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  
+  # SSO Authentication
+  authelia:
+    image: authelia/authelia:4.38
+    container_name: authelia
+    ports:
+      - "192.168.50.199:9091:9091"  # Bind to enp2s0
+    volumes:
+      - ./authelia:/config
+      - ./authelia/secrets:/secrets:ro
+    environment:
+      - TZ=${TIMEZONE}
+    networks:
+      - management_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`${DOMAIN}`) && PathPrefix(`/auth`)"
+      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/authz/forward-auth"
+
+  # DNS and Ad-blocking
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    ports:
+      - "192.168.50.199:53:53/tcp"   # Bind to enp2s0
+      - "192.168.50.199:53:53/udp"   # Bind to enp2s0
+      - "192.168.50.199:3001:3000/tcp"  # Bind to enp2s0
+    volumes:
+      - ./adguard/work:/opt/adguardhome/work
+      - ./adguard/conf:/opt/adguardhome/conf
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  # Photo Management
+  immich-server:
+    container_name: immich-server
+    image: ghcr.io/immich-app/immich-server:release
+    command: ['start.sh', 'immich']
+    ports:
+      - "192.168.50.199:2283:3001"  # Bind to enp2s0
+    volumes:
+      - /data/immich/library:/usr/src/app/upload
+    environment:
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_USERNAME=postgres
+      - DB_DATABASE_NAME=immich
+      - DB_HOSTNAME=immich-postgres
+      - REDIS_HOSTNAME=immich-redis
+    depends_on:
+      - immich-redis
+      - immich-postgres
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  immich-postgres:
+    container_name: immich-postgres
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    environment:
+      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=immich
+    volumes:
+      - /data/immich/postgres:/var/lib/postgresql/data
+    networks:
+      - management_network
+    restart: unless-stopped
+
+  immich-redis:
+    container_name: immich-redis
+    image: redis:6.2-alpine
+    networks:
+      - management_network
+    restart: unless-stopped
+
+networks:
+  vpn_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-vpn
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    internal: false  # Needs internet access through VPN
+
+  management_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-mgmt
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+
+  arr_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-arr
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+    internal: true  # Internal communication only

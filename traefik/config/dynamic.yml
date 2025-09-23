@@ -1,0 +1,38 @@
+http:
+  middlewares:
+    # Security headers
+    secure-headers:
+      headers:
+        frameDeny: true
+        sslRedirect: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+
+    # Service-specific path stripping
+    strip-sonarr:
+      stripPrefix:
+        prefixes:
+          - "/sonarr"
+    
+    strip-radarr:
+      stripPrefix:
+        prefixes:
+          - "/radarr"
+    
+    strip-plex:
+      stripPrefix:
+        prefixes:
+          - "/plex"
+
+  routers:
+    # Plex needs special handling
+    plex:
+      rule: "Host(`serenity.watch`) && PathPrefix(`/plex`)"
+      service: plex
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - secure-headers
