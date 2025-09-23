@@ -1,0 +1,74 @@
+# Media Server Configuration Template
+# This file can be safely committed to git
+# Actual values are stored in .env.secrets
+
+services:
+  sonarr:
+    api_key: ${SONARR_API_KEY}
+    url: ${SONARR_URL}
+    download_clients:
+      - name: SABnzbd
+        host: gluetun
+        port: 8080
+        api_key: ${SABNZBD_API_KEY}
+        category: tv
+      - name: Deluge
+        host: gluetun
+        port: 8112
+        password: ${DELUGE_PASSWORD}
+        category: tv
+
+  radarr:
+    api_key: ${RADARR_API_KEY}
+    url: ${RADARR_URL}
+    download_clients:
+      - name: SABnzbd
+        host: gluetun
+        port: 8080
+        api_key: ${SABNZBD_API_KEY}
+        category: movies
+      - name: Deluge
+        host: gluetun
+        port: 8112
+        password: ${DELUGE_PASSWORD}
+        category: movies
+
+  prowlarr:
+    api_key: ${PROWLARR_API_KEY}
+    url: ${PROWLARR_URL}
+    apps:
+      - name: Sonarr
+        url: ${SONARR_URL}
+        api_key: ${SONARR_API_KEY}
+      - name: Radarr
+        url: ${RADARR_URL}
+        api_key: ${RADARR_API_KEY}
+      - name: Lidarr
+        url: ${LIDARR_URL}
+        api_key: ${LIDARR_API_KEY}
+      - name: Readarr
+        url: ${READARR_URL}
+        api_key: ${READARR_API_KEY}
+
+  bazarr:
+    api_key: ${BAZARR_API_KEY}
+    url: ${BAZARR_URL}
+    sonarr:
+      url: ${SONARR_URL}
+      api_key: ${SONARR_API_KEY}
+    radarr:
+      url: ${RADARR_URL}
+      api_key: ${RADARR_API_KEY}
+
+paths:
+  media:
+    tv: /data/tv
+    movies: /data/movies
+    music: /data/music
+    books: /data/books
+  downloads:
+    root: /downloads
+    complete: /downloads/complete
+    incomplete: /downloads/incomplete
+    torrents: /downloads/torrents
+    usenet: /downloads/usenet
