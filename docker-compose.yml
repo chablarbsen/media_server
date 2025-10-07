@@ -10,8 +10,8 @@ services:
     ports:
       - "192.168.50.51:8888:8888/tcp"  # HTTP proxy bound to enp3s0
       - "192.168.50.51:9091:9091"      # Transmission on enp3s0
-      - "192.168.50.51:8080:8080"      # SABnzbd on enp3s0
-      - "192.168.50.51:8112:8112"      # Deluge web UI on enp3s0
+      - "8080:8080"                    # SABnzbd on all interfaces
+      - "8112:8112"                    # Deluge web UI on all interfaces
       - "192.168.50.51:58846:58846"    # Deluge daemon on enp3s0
     volumes:
       - ./gluetun:/gluetun
@@ -42,6 +42,12 @@ services:
       - PUID=1001
       - PGID=1002
       - LOG_LEVEL=info  # Change back to info
+    healthcheck:
+      test: ["CMD", "ping", "-c", "1", "1.1.1.1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       vpn_network:
         ipv4_address: 172.20.0.10
@@ -111,11 +117,10 @@ services:
       - UMASK=002
     volumes:
       - ./sabnzbd:/config
-      - /data/usenet:/data/usenet
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /data:/data
     depends_on:
       gluetun:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   deluge:
@@ -129,11 +134,10 @@ services:
       - UMASK=002
     volumes:
       - ./deluge:/config
-      - /data/torrents:/data/torrents
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /data:/data
     depends_on:
       gluetun:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   # Media Server
@@ -157,6 +161,8 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - TZ=${TIMEZONE}
+      - PLEX_PREFERENCE_1=ManualPortMappingMode=1
+      - PLEX_PREFERENCE_2=ManualPortMappingPort=32400
     volumes:
       - ./plex:/config
       - /data/media:/data/media
@@ -203,7 +209,6 @@ services:
     volumes:
       - ./sonarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
     networks:
       - management_network
       - arr_network
@@ -226,7 +231,6 @@ services:
     volumes:
       - ./radarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
     networks:
       - management_network
       - arr_network
@@ -269,7 +273,6 @@ services:
     volumes:
       - ./lidarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
     networks:
       - management_network
     restart: unless-stopped
@@ -290,7 +293,6 @@ services:
     volumes:
       - ./readarr:/config
       - /data:/data
-      - /home/chab/ssd-cache/downloads:/downloads
     networks:
       - management_network
     restart: unless-stopped

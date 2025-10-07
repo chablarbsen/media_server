@@ -1,0 +1,14 @@
+[Unit]
+Description=VPN Watchdog Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/docker/mediaserver/vpn-restart-handler.sh fix-namespaces
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
