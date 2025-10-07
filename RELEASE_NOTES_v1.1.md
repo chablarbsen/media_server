@@ -188,11 +188,11 @@ For new installations using public repository:
 
 ## 🔗 Repository Information
 
-**Private Repository:** https://github.com/chablarbsen/media_server_private
+**Private Repository:** https://github.com/<YOUR_GITHUB_USERNAME>/media_server_private
 - Contains: Full real configuration with API keys and credentials
 - Purpose: Personal backup and deployment
 
-**Public Repository:** https://github.com/chablarbsen/media_server
+**Public Repository:** https://github.com/<YOUR_GITHUB_USERNAME>/media_server
 - Contains: Scrubbed configuration with placeholders
 - Purpose: Safe public sharing and collaboration
 
