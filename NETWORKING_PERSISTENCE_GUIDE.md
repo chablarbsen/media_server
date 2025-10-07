@@ -6,8 +6,8 @@ This document provides comprehensive information about network configuration per
 ## External Access Configuration
 
 ### Current Setup
-- **SABnzbd**: Accessible via `67.199.170.5:8080` and `localhost:8080`
-- **Deluge**: Accessible via `67.199.170.5:8112` and `localhost:8112`
+- **SABnzbd**: Accessible via `<YOUR_EXTERNAL_IP>:8080` and `localhost:8080`
+- **Deluge**: Accessible via `<YOUR_EXTERNAL_IP>:8112` and `localhost:8112`
 - **Port Bindings**: Services listen on all interfaces (`0.0.0.0`)
 
 ### Docker Compose Configuration

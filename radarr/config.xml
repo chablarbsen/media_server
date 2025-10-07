@@ -4,7 +4,7 @@
   <SslPort>9898</SslPort>
   <EnableSsl>False</EnableSsl>
   <LaunchBrowser>True</LaunchBrowser>
-  <ApiKey>7c00ac8c57144f8e987e3ba435565bcd</ApiKey>
+  <ApiKey>YOUR_RADARR_API_KEY_HERE</ApiKey>
   <AuthenticationMethod>Basic</AuthenticationMethod>
   <AuthenticationRequired>DisabledForLocalAddresses</AuthenticationRequired>
   <Branch>master</Branch>
