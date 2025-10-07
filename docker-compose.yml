@@ -8,14 +8,14 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - "192.168.50.51:8888:8888/tcp"  # HTTP proxy bound to enp3s0
-      - "192.168.50.51:9091:9091"      # Transmission on enp3s0
+      - "<LAN_INTERFACE_2_IP>:8888:8888/tcp"  # HTTP proxy bound to enp3s0
+      - "<LAN_INTERFACE_2_IP>:9091:9091"      # Transmission on enp3s0
       - "8080:8080"                    # SABnzbd on all interfaces
       - "8112:8112"                    # Deluge web UI on all interfaces
-      - "192.168.50.51:58846:58846"    # Deluge daemon on enp3s0
+      - "<LAN_INTERFACE_2_IP>:58846:58846"    # Deluge daemon on enp3s0
     volumes:
       - ./gluetun:/gluetun
-      - /home/chab/ssd-cache/downloads:/downloads
+      - /home/<YOUR_USERNAME>/ssd-cache/downloads:/downloads
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=openvpn
@@ -29,7 +29,7 @@ services:
       - VPN_PORT_FORWARDING_PROVIDER=protonvpn
       - OPENVPN_PROTOCOL=udp
       - OPENVPN_CIPHERS=AES-256-GCM  # Fixed: use CIPHERS not CIPHER
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.50.0/24,172.18.0.0/16
+      - FIREWALL_OUTBOUND_SUBNETS=<YOUR_LOCAL_SUBNET>,<DOCKER_NETWORK_1_SUBNET>
       - FIREWALL_VPN_INPUT_PORTS=9091,8080,8112,58846
       - FIREWALL_INPUT_PORTS=8888
       - HTTPPROXY=on
@@ -50,7 +50,7 @@ services:
       start_period: 60s
     networks:
       vpn_network:
-        ipv4_address: 172.20.0.10
+        ipv4_address: <DOCKER_VPN_NETWORK_GATEWAY>0
     restart: unless-stopped
     
 
@@ -84,8 +84,8 @@ services:
     image: traefik:v3.0
     container_name: traefik
     ports:
-      - "192.168.50.199:80:80"      # HTTP on enp2s0
-      - "192.168.50.199:8090:8080"  # Dashboard on enp2s0
+      - "<LAN_INTERFACE_1_IP>:80:80"      # HTTP on enp2s0
+      - "<LAN_INTERFACE_1_IP>:8090:8080"  # Dashboard on enp2s0
     command:
       - "--api.dashboard=true"
       - "--providers.docker=true"
@@ -145,7 +145,7 @@ services:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
     ports:
-      - "192.168.50.199:32400:32400"  # Bind to enp2s0 IP
+      - "<LAN_INTERFACE_1_IP>:32400:32400"  # Bind to enp2s0 IP
     deploy:
       resources:
         reservations:
@@ -166,7 +166,7 @@ services:
     volumes:
       - ./plex:/config
       - /data/media:/data/media
-      - /home/chab/ssd-cache/transcode:/transcode
+      - /home/<YOUR_USERNAME>/ssd-cache/transcode:/transcode
     networks:
       - management_network
     restart: unless-stopped
@@ -308,9 +308,9 @@ services:
     image: adguard/adguardhome:latest
     container_name: adguardhome
     ports:
-      - "192.168.50.199:53:53/tcp"
-      - "192.168.50.199:53:53/udp"
-      - "192.168.50.199:3001:3000/tcp"
+      - "<LAN_INTERFACE_1_IP>:53:53/tcp"
+      - "<LAN_INTERFACE_1_IP>:53:53/udp"
+      - "<LAN_INTERFACE_1_IP>:3001:3000/tcp"
     volumes:
       - ./adguard/work:/opt/adguardhome/work
       - ./adguard/conf:/opt/adguardhome/conf
@@ -324,7 +324,7 @@ services:
     image: ghcr.io/immich-app/immich-server:release
     command: ['start.sh', 'immich']
     ports:
-      - "192.168.50.199:2283:3001"
+      - "<LAN_INTERFACE_1_IP>:2283:3001"
     volumes:
       - /data/immich/library:/usr/src/app/upload
     environment:
@@ -367,8 +367,8 @@ networks:
       com.docker.network.bridge.name: br-vpn
     ipam:
       config:
-        - subnet: 172.20.0.0/16
-          gateway: 172.20.0.1
+        - subnet: <DOCKER_VPN_NETWORK_SUBNET>
+          gateway: <DOCKER_VPN_NETWORK_GATEWAY>
     internal: false
 
   management_network:
@@ -377,8 +377,8 @@ networks:
       com.docker.network.bridge.name: br-mgmt
     ipam:
       config:
-        - subnet: 172.18.0.0/16
-          gateway: 172.18.0.1
+        - subnet: <DOCKER_NETWORK_1_SUBNET>
+          gateway: <DOCKER_NETWORK_1_GATEWAY>
 
   arr_network:
     driver: bridge
@@ -386,6 +386,6 @@ networks:
       com.docker.network.bridge.name: br-arr
     ipam:
       config:
-        - subnet: 172.19.0.0/16
-          gateway: 172.19.0.1
+        - subnet: <DOCKER_NETWORK_2_SUBNET>
+          gateway: <DOCKER_NETWORK_2_GATEWAY>
     internal: true
