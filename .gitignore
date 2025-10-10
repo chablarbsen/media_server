@@ -1,31 +1,38 @@
-# PRIVATE REPOSITORY - Real configuration with sensitive data
-# Only exclude files that cause permission errors or are too large
+# Sensitive files - never commit these
+.env
+.env.secrets
+*.key
+*.pem
+*.crt
+*.p12
 
-# Permission-denied files
-traefik/letsencrypt/acme.json
-adguard/work/data/
-authelia/
+# Service configuration directories (contain sensitive data)
+*/config.xml
+*/config.ini
+*/sabnzbd.ini
+*/settings.json
 
-# Very large or unnecessary files
+# Backup directories
+backups/
+
+# Log files
 *.log
 logs/
-backups/
-*/Logs/
-*/Cache/
-*/transcodes/
-*/work/
 
-# Runtime files that change frequently
-*.pid
-*.lock
-*/session.state
-*/torrents.fastresume
+# Database files
+*.db
+*.sqlite
 
-# But DO track these important configs
-!.env.secrets
-!*/config.xml
-!*/config.ini
-!*/sabnzbd.ini
+# Cache and temporary files
+.cache/
+*.tmp
+*.temp
+
+# Auth configuration (removed - authelia not used)
+
+# But DO track these
+!config-template.yaml
 !docker-compose.yml
 !*.sh
-!*.md
+!TODO.md
+!README.md
