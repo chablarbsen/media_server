@@ -362,6 +362,20 @@ services:
       - management_network
     restart: unless-stopped
 
+  # Automated Updates
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    environment:
+      - TZ=${TIMEZONE}
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - WATCHTOWER_SCHEDULE=0 0 3 * * SUN
+      - WATCHTOWER_LOG_LEVEL=info
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
 networks:
   vpn_network:
     driver: bridge
