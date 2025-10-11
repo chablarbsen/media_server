@@ -219,6 +219,7 @@ services:
       - "traefik.http.routers.sonarr.rule=Host(`serenity.watch`) && PathPrefix(`/sonarr`)"
       - "traefik.http.routers.sonarr.entrypoints=web"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      - "traefik.docker.network=mediaserver_management_network"
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -241,6 +242,7 @@ services:
       - "traefik.http.routers.radarr.rule=Host(`serenity.watch`) && PathPrefix(`/radarr`)"
       - "traefik.http.routers.radarr.entrypoints=web"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      - "traefik.docker.network=mediaserver_management_network"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
