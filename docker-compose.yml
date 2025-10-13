@@ -73,6 +73,7 @@ services:
       - ./www:/usr/share/nginx/html:ro
     networks:
       - management_network
+    restart: unless-stopped
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.landing.rule=Host(`serenity.watch`) && Path(`/`)"
@@ -120,7 +121,7 @@ services:
       - /data:/data
     depends_on:
       gluetun:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
 
   deluge:
@@ -137,7 +138,7 @@ services:
       - /data:/data
     depends_on:
       gluetun:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
 
   # Media Server
@@ -263,6 +264,7 @@ services:
       - "traefik.http.routers.bazarr.rule=Host(`serenity.watch`) && PathPrefix(`/bazarr`)"
       - "traefik.http.routers.bazarr.entrypoints=web"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+      - "traefik.docker.network=mediaserver_management_network"
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
