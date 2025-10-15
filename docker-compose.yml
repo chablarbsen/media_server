@@ -376,6 +376,49 @@ services:
       - management_network
     restart: unless-stopped
 
+  # Korean Subtitle Service (OpenSubtitles.com API)
+  korsub:
+    build: ./korsub
+    container_name: korsub
+    environment:
+      - TZ=${TIMEZONE}
+      - PORT=7272
+      - LOG_LEVEL=INFO
+      - MEDIA_PATH=/data/media
+      - OPENSUBTITLES_API_KEY=${OPENSUBTITLES_API_KEY}
+      - RADARR_URL=http://radarr:7878/radarr
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - SONARR_URL=http://sonarr:8989/sonarr
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - SCAN_INTERVAL_HOURS=6
+    volumes:
+      - /data:/data
+    networks:
+      - management_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.korsub.rule=Host(`yourdomain.example.com`) && PathPrefix(`/korsub`)"
+      - "traefik.http.routers.korsub.entrypoints=web"
+      - "traefik.http.services.korsub.loadbalancer.server.port=7272"
+      - "traefik.docker.network=mediaserver_management_network"
+      - "traefik.http.middlewares.korsub-stripprefix.stripprefix.prefixes=/korsub"
+      - "traefik.http.routers.korsub.middlewares=korsub-stripprefix"
+
+  # Automated Updates
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    environment:
+      - TZ=${TIMEZONE}
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - WATCHTOWER_SCHEDULE=0 0 3 * * SUN
+      - WATCHTOWER_LOG_LEVEL=info
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
 networks:
   vpn_network:
     driver: bridge
