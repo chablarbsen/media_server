@@ -7,18 +7,45 @@
 ## Current Repository Setup
 
 ### Public Repository (Sanitized)
-- **URL**: https://github.com/chablarbsen/media_server.git
+- **URL**: https://github.com/your-github-username/media_server.git
 - **Remote**: `origin`
 - **Branch**: `main`
 - **Purpose**: Public sharing with sanitized configuration
 - **Contains**: Generic IPs, example domains, template files
 
 ### Private Repository (Real Configuration)
-- **URL**: https://github.com/chablarbsen/media_server_private.git
+- **URL**: https://github.com/your-github-username/media_server_private.git
 - **Remote**: `private`
 - **Branch**: `master`
 - **Purpose**: Disaster recovery with real configuration
 - **Contains**: Real IPs, API keys, actual service configs
+
+## CRITICAL: Branch and Remote Rules
+
+**NEVER DEVIATE FROM THESE RULES:**
+
+| Branch | Remote | Purpose | Contains |
+|--------|--------|---------|----------|
+| `master` | `private` | Production backup | Real IPs, API keys, domains |
+| `main` | `origin` | Public sharing | Sanitized placeholders |
+
+**❌ FORBIDDEN COMBINATIONS:**
+- `master` → `origin` (exposes secrets to public!)
+- `main` → `private` (overwrites real config!)
+
+## PRE-PUSH SAFETY HOOK
+
+A git pre-push hook is installed to prevent accidents. It will **automatically block** forbidden push combinations.
+
+**Location**: `.git/hooks/pre-push`
+
+**What it blocks:**
+- ❌ Pushing `master` to `origin` (public)
+- ❌ Pushing `main` to `private`
+- ❌ Pushing unsanitized data to `origin/main`
+
+**To bypass** (ONLY if you're absolutely certain): `git push --no-verify`
+**WARNING**: Never bypass without understanding why it blocked you!
 
 ## SAFETY CHECKLIST
 
@@ -27,8 +54,8 @@ Before ANY git operation, run these commands:
 ```bash
 # 1. Verify your location and branch
 pwd
-git branch
-git remote -v
+git branch               # Shows current branch with *
+git remote -v            # Shows configured remotes
 
 # 2. Check what you're about to commit/push
 git status
@@ -42,11 +69,21 @@ ls -la RELEASE_NOTES_*.md                     # List existing release notes
 git log --oneline -1                          # Check latest commit for current version
 
 # 4. Verify the correct remote for your intent
+# The git hook will block if you get this wrong, but verify anyway:
+
 # For private changes (real config):
-git push private master
+if [ "$(git branch --show-current)" = "master" ]; then
+    git push private master
+else
+    echo "ERROR: Not on master branch!"
+fi
 
 # For public changes (sanitized):
-git push origin main
+if [ "$(git branch --show-current)" = "main" ]; then
+    git push origin main
+else
+    echo "ERROR: Not on main branch!"
+fi
 ```
 
 ## PROTECTION RULES
@@ -115,13 +152,35 @@ git add -A && git commit -m "Updated real config"
 git push private master         # Push to PRIVATE repo
 ```
 
-### Updating Public Repository
+### Updating Public Repository (COMPLETE WORKFLOW)
 ```bash
-git checkout main               # Switch to sanitized branch
-bash sanitize-for-public.sh    # Re-sanitize if needed
-git add -A && git commit -m "Updated public config"
-git push origin main           # Push to PUBLIC repo
+# Step 1: Commit your changes to master (real config) first
+git checkout master
+git add docker-compose.yml CHANGELOG.md  # Add only config files, not runtime data
+git commit -m "v1.x.x - Description of changes"
+git push private master
+
+# Step 2: Switch to main branch and merge changes
+git checkout main
+git merge master --no-commit  # Merge but don't commit yet
+
+# Step 3: Run sanitization script
+./sanitize-for-public.sh
+
+# Step 4: Review sanitized changes
+git diff  # Verify all secrets are replaced with placeholders
+
+# Step 5: Commit and push sanitized version
+git add -A
+git commit -m "v1.x.x - Description of changes (sanitized)"
+git push origin main  # Pre-push hook will verify safety
+
+# Step 6: Verify public repo is clean
+# Visit https://github.com/your-username/media_server
+# Check docker-compose.yml and .md files for exposed secrets
 ```
+
+**Important**: The pre-push hook will block if you try to push unsanitized data!
 
 ## BACKUP STRATEGY
 

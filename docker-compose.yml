@@ -8,14 +8,14 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - "192.168.1.101:8888:8888/tcp"  # HTTP proxy bound to enp3s0
-      - "192.168.1.101:9091:9091"      # Transmission on enp3s0
-      - "192.168.1.101:8080:8080"      # SABnzbd on enp3s0
-      - "192.168.1.101:8112:8112"      # Deluge web UI on enp3s0
-      - "192.168.1.101:58846:58846"    # Deluge daemon on enp3s0
+      - "YOUR_VPN_IP:8888:8888/tcp"  # HTTP proxy bound to enp3s0
+      - "YOUR_VPN_IP:9091:9091"      # Transmission on enp3s0
+      - "8080:8080"                    # SABnzbd on all interfaces
+      - "8112:8112"                    # Deluge web UI on all interfaces
+      - "YOUR_VPN_IP:58846:58846"    # Deluge daemon on enp3s0
     volumes:
       - ./gluetun:/gluetun
-      - /home/user/ssd-cache/downloads:/downloads
+      - /home/username/ssd-cache/downloads:/downloads
     environment:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=openvpn
@@ -42,6 +42,12 @@ services:
       - PUID=1001
       - PGID=1002
       - LOG_LEVEL=info  # Change back to info
+    healthcheck:
+      test: ["CMD", "ping", "-c", "1", "1.1.1.1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       vpn_network:
         ipv4_address: 172.20.0.10
@@ -67,9 +73,10 @@ services:
       - ./www:/usr/share/nginx/html:ro
     networks:
       - management_network
+    restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.landing.rule=Host(`yourdomain.example.com`) && Path(`/`)"
+      - "traefik.http.routers.landing.rule=Host(`your-domain.com`) && Path(`/`)"
       - "traefik.http.routers.landing.entrypoints=web"
       - "traefik.http.services.landing.loadbalancer.server.port=80"
 
@@ -78,8 +85,8 @@ services:
     image: traefik:v3.0
     container_name: traefik
     ports:
-      - "192.168.1.100:80:80"      # HTTP on enp2s0
-      - "192.168.1.100:8090:8080"  # Dashboard on enp2s0
+      - "YOUR_SERVER_IP:80:80"      # HTTP on enp2s0
+      - "YOUR_SERVER_IP:8090:8080"  # Dashboard on enp2s0
     command:
       - "--api.dashboard=true"
       - "--providers.docker=true"
@@ -96,7 +103,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`yourdomain.example.com`) && PathPrefix(`/traefik`)"
+      - "traefik.http.routers.dashboard.rule=Host(`your-domain.com`) && PathPrefix(`/traefik`)"
       - "traefik.http.routers.dashboard.service=api@internal"
 
   # Download Clients (VPN-routed)
@@ -111,8 +118,7 @@ services:
       - UMASK=002
     volumes:
       - ./sabnzbd:/config
-      - /data/usenet:/data/usenet
-      - /home/user/ssd-cache/downloads:/downloads
+      - /data:/data
     depends_on:
       gluetun:
         condition: service_started
@@ -129,8 +135,7 @@ services:
       - UMASK=002
     volumes:
       - ./deluge:/config
-      - /data/torrents:/data/torrents
-      - /home/user/ssd-cache/downloads:/downloads
+      - /data:/data
     depends_on:
       gluetun:
         condition: service_started
@@ -141,7 +146,7 @@ services:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
     ports:
-      - "192.168.1.100:32400:32400"  # Bind to enp2s0 IP
+      - "YOUR_SERVER_IP:32400:32400"  # Bind to enp2s0 IP
     deploy:
       resources:
         reservations:
@@ -157,16 +162,25 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - TZ=${TIMEZONE}
+      - PLEX_PREFERENCE_1=ManualPortMappingMode=1
+      - PLEX_PREFERENCE_2=ManualPortMappingPort=32400
     volumes:
       - ./plex:/config
       - /data/media:/data/media
-      - /home/user/ssd-cache/transcode:/transcode
+      - /home/username/ssd-cache/transcode:/transcode
     networks:
       - management_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/web/index.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.plex.rule=Host(`yourdomain.example.com`) && PathPrefix(`/plex`)"
+      - "traefik.http.routers.plex.rule=Host(`your-domain.com`) && PathPrefix(`/plex`)"
       - "traefik.http.routers.plex.entrypoints=web"
       - "traefik.http.services.plex.loadbalancer.server.port=32400"
 
@@ -186,9 +200,16 @@ services:
       - management_network
       - arr_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9696/prowlarr/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.prowlarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/prowlarr`)"
+      - "traefik.http.routers.prowlarr.rule=Host(`your-domain.com`) && PathPrefix(`/prowlarr`)"
       - "traefik.http.routers.prowlarr.entrypoints=web"
       - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
 
@@ -203,17 +224,24 @@ services:
     volumes:
       - ./sonarr:/config
       - /data:/data
-      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
       - arr_network
       - vpn_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/sonarr/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/sonarr`)"
+      - "traefik.http.routers.sonarr.rule=Host(`your-domain.com`) && PathPrefix(`/sonarr`)"
       - "traefik.http.routers.sonarr.entrypoints=web"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      - "traefik.docker.network=mediaserver_management_network"
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -226,17 +254,24 @@ services:
     volumes:
       - ./radarr:/config
       - /data:/data
-      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
       - arr_network
       - vpn_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878/radarr/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/radarr`)"
+      - "traefik.http.routers.radarr.rule=Host(`your-domain.com`) && PathPrefix(`/radarr`)"
       - "traefik.http.routers.radarr.entrypoints=web"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      - "traefik.docker.network=mediaserver_management_network"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -252,11 +287,19 @@ services:
     networks:
       - management_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6767/bazarr/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.bazarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/bazarr`)"
+      - "traefik.http.routers.bazarr.rule=Host(`your-domain.com`) && PathPrefix(`/bazarr`)"
       - "traefik.http.routers.bazarr.entrypoints=web"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+      - "traefik.docker.network=mediaserver_management_network"
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
@@ -269,13 +312,19 @@ services:
     volumes:
       - ./lidarr:/config
       - /data:/data
-      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8686/lidarr/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lidarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/lidarr`)"
+      - "traefik.http.routers.lidarr.rule=Host(`your-domain.com`) && PathPrefix(`/lidarr`)"
       - "traefik.http.routers.lidarr.entrypoints=web"
       - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
 
@@ -290,43 +339,31 @@ services:
     volumes:
       - ./readarr:/config
       - /data:/data
-      - /home/user/ssd-cache/downloads:/downloads
     networks:
       - management_network
     restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/readarr/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.readarr.rule=Host(`yourdomain.example.com`) && PathPrefix(`/readarr`)"
+      - "traefik.http.routers.readarr.rule=Host(`your-domain.com`) && PathPrefix(`/readarr`)"
       - "traefik.http.routers.readarr.entrypoints=web"
       - "traefik.http.services.readarr.loadbalancer.server.port=8787"
 
-  # SSO Authentication
-  authelia:
-    image: authelia/authelia:4.38
-    container_name: authelia
-    ports:
-      - "192.168.1.100:9091:9091"
-    volumes:
-      - ./authelia:/config
-      - ./authelia/secrets:/secrets:ro
-    environment:
-      - TZ=${TIMEZONE}
-    networks:
-      - management_network
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.authelia.rule=Host(`yourdomain.example.com`) && PathPrefix(`/auth`)"
-      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/authz/forward-auth"
 
   # DNS and Ad-blocking
   adguardhome:
     image: adguard/adguardhome:latest
     container_name: adguardhome
     ports:
-      - "192.168.1.100:53:53/tcp"
-      - "192.168.1.100:53:53/udp"
-      - "192.168.1.100:3001:3000/tcp"
+      - "YOUR_SERVER_IP:53:53/tcp"
+      - "YOUR_SERVER_IP:53:53/udp"
+      - "YOUR_SERVER_IP:3001:3000/tcp"
     volumes:
       - ./adguard/work:/opt/adguardhome/work
       - ./adguard/conf:/opt/adguardhome/conf
@@ -340,7 +377,7 @@ services:
     image: ghcr.io/immich-app/immich-server:release
     command: ['start.sh', 'immich']
     ports:
-      - "192.168.1.100:2283:3001"
+      - "YOUR_SERVER_IP:2283:3001"
     volumes:
       - /data/immich/library:/usr/src/app/upload
     environment:
@@ -368,6 +405,7 @@ services:
     networks:
       - management_network
     restart: unless-stopped
+    stop_grace_period: 30s
 
   immich-redis:
     container_name: immich-redis
@@ -385,12 +423,14 @@ services:
       - PORT=7272
       - LOG_LEVEL=INFO
       - MEDIA_PATH=/data/media
+      - WATCHED_FOLDER=/data/subtitles/incoming
       - OPENSUBTITLES_API_KEY=${OPENSUBTITLES_API_KEY}
       - RADARR_URL=http://radarr:7878/radarr
       - RADARR_API_KEY=${RADARR_API_KEY}
       - SONARR_URL=http://sonarr:8989/sonarr
       - SONARR_API_KEY=${SONARR_API_KEY}
       - SCAN_INTERVAL_HOURS=6
+      - WATCHED_FOLDER_INTERVAL_MINUTES=5
     volumes:
       - /data:/data
     networks:
@@ -398,7 +438,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.korsub.rule=Host(`yourdomain.example.com`) && PathPrefix(`/korsub`)"
+      - "traefik.http.routers.korsub.rule=Host(`your-domain.com`) && PathPrefix(`/korsub`)"
       - "traefik.http.routers.korsub.entrypoints=web"
       - "traefik.http.services.korsub.loadbalancer.server.port=7272"
       - "traefik.docker.network=mediaserver_management_network"
@@ -415,6 +455,7 @@ services:
       - WATCHTOWER_INCLUDE_RESTARTING=true
       - WATCHTOWER_SCHEDULE=0 0 3 * * SUN
       - WATCHTOWER_LOG_LEVEL=info
+      - WATCHTOWER_TIMEOUT=60s
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
