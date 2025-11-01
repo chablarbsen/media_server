@@ -70,7 +70,7 @@ DONE - fully automatic!
 **Configuration:**
 - Container: `korsub`
 - Port: 7272
-- Access: `http://serenity.watch/korsub` (via Traefik)
+- Access: `http://your-domain.com/korsub` (via Traefik)
 - Networks: `management_network`
 
 **Features:**

@@ -45,12 +45,14 @@ for file in *.md; do
         sed -i 's|chab|username|g' "$file"
         sed -i 's|chablarbsen|your-github-username|g' "$file"
 
-        # Sanitize API keys
-        sed -i 's|OPENSUBTITLES_API_KEY=FV19gN73WvIjfDElJeco5yIPnSai85UC|OPENSUBTITLES_API_KEY=YOUR_OPENSUBTITLES_KEY|g' "$file"
-        sed -i 's|RADARR_API_KEY=7c00ac8c57144f8e987e3ba435565bcd|RADARR_API_KEY=YOUR_RADARR_KEY|g' "$file"
-        sed -i 's|RADARR_API_KEY=34dd79502c9f4e89187a7de6dc5f953d|RADARR_API_KEY=YOUR_RADARR_KEY|g' "$file"
-        sed -i 's|SONARR_API_KEY=128e4fcd971c44d1a514715b8b4a5220|SONARR_API_KEY=YOUR_SONARR_KEY|g' "$file"
-        sed -i 's|SONARR_API_KEY=fbba6cec984d96eb4ca943f6f05eb778|SONARR_API_KEY=YOUR_SONARR_KEY|g' "$file"
+        # Sanitize API keys - use regex patterns to catch any 32-char hex API keys
+        sed -i 's|OPENSUBTITLES_API_KEY=[A-Za-z0-9]\{20,\}|OPENSUBTITLES_API_KEY=YOUR_OPENSUBTITLES_KEY|g' "$file"
+        sed -i 's|RADARR_API_KEY=[a-f0-9]\{32\}|RADARR_API_KEY=YOUR_RADARR_KEY|g' "$file"
+        sed -i 's|SONARR_API_KEY=[a-f0-9]\{32\}|SONARR_API_KEY=YOUR_SONARR_KEY|g' "$file"
+
+        # Sanitize API keys in CHANGELOG format (old → new format)
+        sed -i 's|`[a-f0-9]\{32\}` → `[a-f0-9]\{32\}`|`REDACTED` → `REDACTED`|g' "$file"
+        sed -i 's|API key: `[a-f0-9]\{32\}`|API key: `REDACTED`|g' "$file"
 
         echo "  ✅ Sanitized: $file"
     fi

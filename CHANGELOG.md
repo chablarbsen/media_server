@@ -12,8 +12,8 @@
 **IMMEDIATE ACTIONS TAKEN**:
 
 1. **Regenerated Compromised API Keys**:
-   - ✅ Radarr API key: `7c00ac8c57144f8e987e3ba435565bcd` → `34dd79502c9f4e89187a7de6dc5f953d`
-   - ✅ Sonarr API key: `128e4fcd971c44d1a514715b8b4a5220` → `fbba6cec984d96eb4ca943f6f05eb778`
+   - ✅ Radarr API key: `REDACTED` → `REDACTED`
+   - ✅ Sonarr API key: `REDACTED` → `REDACTED`
    - ⚠️  OpenSubtitles API key: Requires manual regeneration (external service)
    - Updated KorSub service with new API keys
 
