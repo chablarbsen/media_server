@@ -289,9 +289,9 @@ docker exec deluge /bin/bash /config/scripts/notify-sonarr.sh \
 
 **Current State:**
 ```yaml
-- OPENSUBTITLES_API_KEY=FV19gN73WvIjfDElJeco5yIPnSai85UC
-- RADARR_API_KEY=7c00ac8c57144f8e987e3ba435565bcd
-- SONARR_API_KEY=128e4fcd971c44d1a514715b8b4a5220
+- OPENSUBTITLES_API_KEY=YOUR_OPENSUBTITLES_KEY
+- RADARR_API_KEY=YOUR_RADARR_KEY
+- SONARR_API_KEY=YOUR_SONARR_KEY
 ```
 
 **Recommended for v1.6:**

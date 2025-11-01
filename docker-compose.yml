@@ -62,6 +62,12 @@ services:
     networks:
       - management_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
       - traefik
 
@@ -94,6 +100,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--log.level=INFO"
       - "--accesslog=true"
+      - "--ping=true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/logs:/logs
@@ -101,6 +108,12 @@ services:
       - management_network
       - arr_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`your-domain.com`) && PathPrefix(`/traefik`)"
@@ -119,6 +132,7 @@ services:
     volumes:
       - ./sabnzbd:/config
       - /data:/data
+      - /home/username/ssd-cache/downloads:/downloads  # SSD for incomplete downloads
     depends_on:
       gluetun:
         condition: service_started
@@ -459,6 +473,32 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
+
+  # Health Monitoring & Alerting
+  healthwatch:
+    build: ./healthwatch
+    container_name: healthwatch
+    environment:
+      - TZ=${TIMEZONE}
+      - CHECK_INTERVAL_MINUTES=15
+      - ALERT_COOLDOWN_MINUTES=60
+      - MAILGUN_API_KEY=${MAILGUN_API_KEY}
+      - MAILGUN_DOMAIN=${MAILGUN_DOMAIN}
+      - ADMIN_EMAILS=${ADMIN_EMAILS}
+      - FROM_EMAIL=healthwatch@${MAILGUN_DOMAIN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./healthwatch/data:/data
+    networks:
+      - management_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.healthwatch.rule=Host(`your-domain.com`) && PathPrefix(`/healthwatch`)"
+      - "traefik.http.routers.healthwatch.entrypoints=web"
+      - "traefik.http.services.healthwatch.loadbalancer.server.port=8888"
+      - "traefik.http.middlewares.healthwatch-stripprefix.stripprefix.prefixes=/healthwatch"
+      - "traefik.http.routers.healthwatch.middlewares=healthwatch-stripprefix"
 
 networks:
   vpn_network:

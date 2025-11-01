@@ -31,6 +31,7 @@ logs/
 *.sqlite
 *.db-wal
 *.db-shm
+*.db-*
 
 # Temporary files
 .cache/
@@ -51,9 +52,73 @@ logs/
 # Traefik certificates
 traefik/letsencrypt/
 
-# Allow these safe files
+# Plex runtime data (NOT configuration)
+plex/Library/
+plex/Preferences.xml
+plex/*/Cache/
+plex/*/Logs/
+plex/*/Plug-in Support/
+plex/*/Media/
+plex/*/Metadata/
+
+# Deluge runtime data (NOT configuration)
+deluge/state/
+deluge/*.conf
+deluge/*.state
+deluge/session.state
+deluge/archive/
+deluge/ssl/
+
+# Bazarr runtime data
+bazarr/config/config.yaml
+bazarr/config/*.txt
+bazarr/log/
+bazarr/db/
+
+# Prowlarr runtime data
+prowlarr/Definitions/
+
+# SABnzbd runtime data
+sabnzbd/admin/
+sabnzbd/*.ini
+sabnzbd/Downloads/
+
+# Sonarr/Radarr/Lidarr/Readarr runtime
+sonarr/*.db*
+sonarr/*.xml
+sonarr/MediaCover/
+sonarr/logs/
+radarr/*.db*
+radarr/*.xml
+radarr/MediaCover/
+radarr/logs/
+lidarr/*.db*
+lidarr/*.xml
+lidarr/MediaCover/
+lidarr/logs/
+readarr/*.db*
+readarr/*.xml
+readarr/MediaCover/
+readarr/logs/
+
+# Immich runtime data
+immich/upload/
+immich/library/
+immich/thumbs/
+immich/profile/
+immich/encoded-video/
+
+# KorSub runtime
+korsub/*.py
+korsub/__pycache__/
+
+# Only include these for disaster recovery
+!docker-compose.yml
 !.env.example
+!.env.template
 !docker-compose.template.yml
 !*.sh
 !*.md
-!config-template.yaml
+!README.md
+!CHANGELOG.md
+!healthwatch/
